@@ -1,0 +1,54 @@
+{% extends "base/base.html" %}
+
+{% block title %}{{ profile_user.get_full_name|default:profile_user.username }} | Django Blog{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                {% if profile_user.profile.avatar %}
+                <img src="{{ profile_user.profile.avatar.url }}" class="rounded-circle mb-3"
+                     alt="{{ profile_user.username }}" style="width: 120px; height: 120px; object-fit: cover;">
+                {% else %}
+                <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                     style="width: 120px; height: 120px;">
+                    <i class="bi bi-person-fill text-white" style="font-size: 3rem;"></i>
+                </div>
+                {% endif %}
+                <h3>{{ profile_user.get_full_name|default:profile_user.username }}</h3>
+                {% if profile_user.profile.bio %}
+                <p class="text-muted">{{ profile_user.profile.bio }}</p>
+                {% endif %}
+                {% if profile_user.profile.website %}
+                <p>
+                    <a href="{{ profile_user.profile.website }}" target="_blank" rel="noopener noreferrer">
+                        <i class="bi bi-globe"></i> {{ profile_user.profile.website }}
+                    </a>
+                </p>
+                {% endif %}
+                <p class="text-muted"><small>Member since {{ profile_user.date_joined|date:"F Y" }}</small></p>
+            </div>
+        </div>
+
+        <h4 class="mb-3">Recent Posts</h4>
+        {% for article in articles %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5>
+                    <a href="{% url 'article-detail' slug=article.slug %}" class="text-decoration-none">
+                        {{ article.title }}
+                    </a>
+                </h5>
+                <p class="text-muted mb-1">
+                    <small>{{ article.published_at|date:"M d, Y"|default:article.created_at|date:"M d, Y" }}</small>
+                </p>
+                <p>{{ article.excerpt|default:article.content|truncatewords:30 }}</p>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-muted">This user hasn't published any posts yet.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

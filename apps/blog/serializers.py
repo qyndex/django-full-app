@@ -28,13 +28,22 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    """Serializer for Comment."""
+    """Serializer for Comment.
+
+    The ``post`` field is writable but not required so the serializer works
+    both for the standalone ``/api/comments/`` endpoint (where the client
+    sends ``post``) and for the nested ``/api/articles/{pk}/add-comment/``
+    action (where the view injects the post via ``serializer.save(post=...)``)
+    """
 
     author_name = serializers.CharField(source="author.username", read_only=True)
+    post = serializers.PrimaryKeyRelatedField(
+        queryset=Post.objects.all(), required=False,
+    )
 
     class Meta:
         model = Comment
-        fields = ["id", "author", "author_name", "content", "approved", "created_at"]
+        fields = ["id", "post", "author", "author_name", "content", "approved", "created_at"]
         read_only_fields = ["id", "author", "approved", "created_at"]
 
 

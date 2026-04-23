@@ -29,7 +29,7 @@ class PostFactory(factory.django.DjangoModelFactory):
 
     title = factory.Sequence(lambda n: f"Post Title {n}")
     author = factory.SubFactory(UserFactory)
-    content = factory.Faker("paragraphs", nb=3, as_text=True)
+    content = factory.Faker("text", max_nb_chars=800)
     excerpt = factory.Faker("sentence")
     status = Post.STATUS_DRAFT
     category = factory.SubFactory(CategoryFactory)
@@ -37,7 +37,7 @@ class PostFactory(factory.django.DjangoModelFactory):
 
 class PublishedPostFactory(PostFactory):
     status = Post.STATUS_PUBLISHED
-    published_at = factory.Faker("date_time_this_year", tzinfo=None)
+    published_at = factory.LazyFunction(lambda: __import__("django.utils.timezone", fromlist=["now"]).now())
 
 
 class CommentFactory(factory.django.DjangoModelFactory):

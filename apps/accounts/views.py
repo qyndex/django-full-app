@@ -10,7 +10,7 @@ from .forms import ProfileForm, RegisterForm, UserForm
 def register(request):
     """Registration view — creates User + Profile via signal."""
     if request.user.is_authenticated:
-        return redirect("blog:article-list")
+        return redirect("article-list")
 
     if request.method == "POST":
         form = RegisterForm(request.POST)

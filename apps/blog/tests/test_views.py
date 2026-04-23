@@ -98,9 +98,10 @@ class TestDashboardView:
         assert response.status_code == 200
 
     def test_dashboard_shows_all_statuses(self, client: Client):
-        """Dashboard shows draft and published (unlike public list)."""
+        """Dashboard shows draft and published for staff (unlike public list)."""
         user = User.objects.create_user(
-            username="staffuser", email="staff@example.com", password="pass123"
+            username="staffuser", email="staff@example.com", password="pass123",
+            is_staff=True,
         )
         PostFactory(title="Draft Post", status=Post.STATUS_DRAFT)
         PublishedPostFactory(title="Published Post")
@@ -110,3 +111,17 @@ class TestDashboardView:
         content = response.content.decode()
         assert "Draft Post" in content
         assert "Published Post" in content
+
+    def test_dashboard_shows_only_own_posts_for_non_staff(self, client: Client):
+        """Non-staff users only see their own posts in the dashboard."""
+        user = User.objects.create_user(
+            username="regularuser", email="regular@example.com", password="pass123"
+        )
+        PostFactory(title="My Draft", status=Post.STATUS_DRAFT, author=user)
+        PostFactory(title="Someone Else Draft", status=Post.STATUS_DRAFT)
+        client.force_login(user)
+        url = reverse("dashboard")
+        response = client.get(url)
+        content = response.content.decode()
+        assert "My Draft" in content
+        assert "Someone Else Draft" not in content

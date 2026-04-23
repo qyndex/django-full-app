@@ -1,0 +1,114 @@
+{% extends "base/base.html" %}
+
+{% block title %}{{ article.title }} | Django Blog{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <article>
+            {% if article.featured_image %}
+            <img src="{{ article.featured_image.url }}" class="img-fluid rounded mb-4" alt="{{ article.title }}">
+            {% endif %}
+
+            <h1>{{ article.title }}</h1>
+
+            <div class="text-muted mb-4">
+                <i class="bi bi-person"></i>
+                <a href="{% url 'accounts:public-profile' username=article.author.username %}"
+                   class="text-muted text-decoration-none">
+                    {{ article.author.get_full_name|default:article.author.username }}
+                </a>
+                &middot;
+                <i class="bi bi-calendar"></i>
+                {{ article.published_at|date:"F d, Y"|default:article.created_at|date:"F d, Y" }}
+                &middot;
+                <i class="bi bi-eye"></i> {{ article.views }} views
+                {% if article.category %}
+                &middot;
+                <a href="{% url 'articles-by-category' category_slug=article.category.slug %}"
+                   class="badge bg-secondary text-decoration-none">{{ article.category.name }}</a>
+                {% endif %}
+            </div>
+
+            {% if user == article.author or user.is_staff %}
+            <div class="mb-3">
+                <a href="{% url 'post-edit' slug=article.slug %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-pencil"></i> Edit
+                </a>
+                <a href="{% url 'post-delete' slug=article.slug %}" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-trash"></i> Delete
+                </a>
+            </div>
+            {% endif %}
+
+            <div class="article-content mb-4">
+                {{ article.content|linebreaks }}
+            </div>
+
+            {% if article.tags.all %}
+            <div class="mb-4">
+                <strong>Tags:</strong>
+                {% for tag in article.tags.all %}
+                <a href="{% url 'articles-by-tag' tag_slug=tag.slug %}"
+                   class="badge bg-primary text-decoration-none">{{ tag.name }}</a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </article>
+
+        <hr>
+
+        <section id="comments">
+            <h3 class="mb-3">
+                Comments ({{ comments|length }})
+            </h3>
+
+            {% for comment in comments %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <strong>
+                            <a href="{% url 'accounts:public-profile' username=comment.author.username %}"
+                               class="text-decoration-none">
+                                {{ comment.author.get_full_name|default:comment.author.username }}
+                            </a>
+                        </strong>
+                        <small class="text-muted">{{ comment.created_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                    <p class="mt-2 mb-0">{{ comment.content|linebreaks }}</p>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">No comments yet. Be the first to share your thoughts!</p>
+            {% endfor %}
+
+            {% if user.is_authenticated %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Leave a Comment</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'article-detail' slug=article.slug %}">
+                        {% csrf_token %}
+                        {{ comment_form.content }}
+                        <button type="submit" class="btn btn-primary mt-3">
+                            <i class="bi bi-chat-dots"></i> Submit Comment
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-secondary mt-4">
+                <a href="{% url 'accounts:login' %}?next={{ request.path }}">Log in</a> to leave a comment.
+            </div>
+            {% endif %}
+        </section>
+
+        <div class="mt-4">
+            <a href="{% url 'article-list' %}" class="btn btn-outline-secondary">
+                &larr; Back to all posts
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
