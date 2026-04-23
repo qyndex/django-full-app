@@ -4,32 +4,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Django Full App — Full Django 5.1 blog application with authentication, Jinja2 templates, static files, DRF API, custom admin actions, and class-based views.
+Django Full App — Full Django 5.2 blog + accounts application with authentication, crispy forms, DRF API, class-based views, and split dev/prod settings.
 
-Built with Django 5.x, Python 3.13, and Django REST Framework.
+Built with Django 5.2, Python 3.13, Django REST Framework, and SQLite (dev) / PostgreSQL (prod).
 
 ## Commands
 
 ```bash
 pip install -r requirements.txt          # Install dependencies
-python manage.py runserver               # Start dev server (http://localhost:8000)
-python manage.py test                    # Run tests
-python manage.py makemigrations          # Create migrations
+cp .env.example .env                     # Set up environment
 python manage.py migrate                 # Apply migrations
+python manage.py runserver               # Start dev server (http://localhost:8000)
+python -m pytest                         # Run tests (pytest + pytest-django)
+python -m pytest --cov                   # Tests with coverage
 ruff check .                             # Lint
 ruff format .                            # Format
 ```
 
+## Environment
+
+Copy `.env.example` to `.env`. Dev mode uses SQLite by default — no database setup needed.
+
 ## Architecture
 
-- `manage.py` — Django management entry point
-- `config/` or project root — Django settings, URLs, WSGI/ASGI
-- `*/models.py` — Database models
-- `*/views.py` — View functions / class-based views
-- `*/serializers.py` — DRF serializers
-- `*/urls.py` — URL routing
-- `templates/` — Django HTML templates
-- `static/` — Static assets
+- `config/settings/` — Split settings: `base.py` (shared), `dev.py` (SQLite, debug), `prod.py` (Postgres, SSL)
+- `apps/accounts/` — User auth: login, signup, logout, profile, custom user signals
+- `apps/blog/` — Blog CRUD: posts, categories, DRF API viewsets, RSS feed
+- `apps/*/tests/` — pytest test files with factory-boy fixtures
+- `conftest.py` — Shared pytest fixtures (api_client, auth_client)
 
 ## Rules
 
@@ -37,3 +39,5 @@ ruff format .                            # Format
 - Use class-based views for CRUD, function views for simple endpoints
 - Parameterized queries only — never raw SQL with string interpolation
 - All new models need proper `__str__` and `Meta.ordering`
+- Settings: use `os.environ.get()` with sensible defaults — never crash on missing env vars
+- Tests: use pytest + factory-boy, not Django TestCase
